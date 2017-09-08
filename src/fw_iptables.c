@@ -54,7 +54,6 @@
 #include "wd_util.h"
 #include "ipset.h"
 
-#include "fw3_iptc.h"
 
 //>>> liudf added 20160127
 static FILE	*f_fw_init = NULL;
