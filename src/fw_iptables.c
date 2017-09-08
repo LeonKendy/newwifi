@@ -1147,14 +1147,12 @@ iptables_fw_access(fw_access_t type, const char *ip, const char *mac, int tag)
 
 	switch (type) {
 	case FW_ACCESS_ALLOW:
-		iptables_do_command("-t mangle -A " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark 0x%x0000/0xff0000", ip,
-							mac, tag);
+		iptables_do_command("-t mangle -A " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark 0x%x0000/0xff0000", ip, mac, tag);
 		rc = iptables_do_command("-t mangle -A " CHAIN_INCOMING " -d %s -j ACCEPT", ip);
 		break;
 	case FW_ACCESS_DENY:
 		/* XXX Add looping to really clear? */
-		iptables_do_command("-t mangle -D " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark 0x%x0000/0xff0000", ip,
-							mac, tag);
+		iptables_do_command("-t mangle -D " CHAIN_OUTGOING " -s %s -m mac --mac-source %s -j MARK --set-mark 0x%x0000/0xff0000", ip, mac, tag);
 		rc = iptables_do_command("-t mangle -D " CHAIN_INCOMING " -d %s -j ACCEPT", ip);
 		break;
 	default:
