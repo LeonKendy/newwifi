@@ -78,11 +78,9 @@ static char *fw_allow_script	= "/tmp/fw_allow";
 static char *iptables_compile(const char *, const char *, const t_firewall_rule *);
 
 // Use libiptc instead command iptables by zhangzf, 20170413
-static int iptables_do_append_command(void *handle, const char *format, ...);
 static void iptables_load_ruleset(const char *, const char *, const char *, void *handle);
 
 #define iptables_do_command(...) \
-	iptables_do_append_command(NULL, __VA_ARGS__)
 
 /**
 Used to supress the error output of the firewall during destruction */
@@ -258,7 +256,6 @@ iptables_do_append_command(void *handle, const char *format, ...)
 
 	debug(LOG_DEBUG, "Executing command: %s", cmd);
 
-	rc = fw3_ipt_rule_append(handle, fmt_cmd);
 
 	if (rc != 1) {
 		// If quiet, do not display the error
@@ -769,8 +766,6 @@ iptables_fw_init(void)
 	 *
 	 */
 
-	handle = fw3_ipt_open(FW3_TABLE_MANGLE);
-
 	/* Create new chains */
 	// liudf added 20160106
 	iptables_do_append_command(handle, "-t mangle -N " CHAIN_ROAM);
@@ -803,17 +798,12 @@ iptables_fw_init(void)
 	iptables_do_append_command(handle, "-t mangle -A " CHAIN_TRUSTED " -m set --match-set " CHAIN_TRUSTED_LOCAL " src -j MARK --set-mark 0x%x0000/0xff0000", FW_MARK_KNOWN);
 	//<<< liudf added end
 
-	fw3_ipt_commit(handle);
-	fw3_ipt_close(handle);
-
 
 	/*
 	 *
 	 * Everything in the NAT table
 	 *
 	 */
-
-	handle = fw3_ipt_open(FW3_TABLE_NAT);
 
 	/* Create new chains */
 	iptables_do_append_command(handle, "-t nat -N " CHAIN_UNTRUSTED);
@@ -884,8 +874,6 @@ iptables_fw_init(void)
 		iptables_do_append_command(handle, "-t nat -A " CHAIN_UNKNOWN " -p tcp --dport 80 -j REDIRECT --to-ports %d", gw_http_port);
 	}
 
-	fw3_ipt_commit(handle);
-	fw3_ipt_close(handle);
 
 
 	/*
@@ -895,7 +883,6 @@ iptables_fw_init(void)
 	 */
 
 	/* Create new chains */
-	handle = fw3_ipt_open(FW3_TABLE_FILTER);
 
 	iptables_do_append_command(handle, "-t filter -N " CHAIN_TO_INTERNET);
 	iptables_do_append_command(handle, "-t filter -N " CHAIN_AUTHSERVERS);
@@ -949,9 +936,6 @@ iptables_fw_init(void)
 	iptables_do_append_command(handle, "-t filter -A " CHAIN_TO_INTERNET " -j " CHAIN_UNKNOWN);
 	iptables_load_ruleset("filter", FWRULESET_UNKNOWN_USERS, CHAIN_UNKNOWN, handle);
 	iptables_do_append_command(handle, "-t filter -A " CHAIN_UNKNOWN " -j REJECT --reject-with icmp-port-unreachable");
-
-	fw3_ipt_commit(handle);
-	fw3_ipt_close(handle);
 
 	free(ext_interface);
 
